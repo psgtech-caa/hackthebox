@@ -1,0 +1,47 @@
+# Hack-The-Box Competition Platform
+
+# Node modules
+node_modules/
+.next/
+dist/
+build/
+out/
+
+# Environment variables
+.env
+.env*.local
+
+# Database
+apps/backend/prisma/migrations/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*.pem
+Thumbs.db
+
+# Docker data
+docker/postgres/data/
+docker/redis/data/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# Testing
+/coverage
