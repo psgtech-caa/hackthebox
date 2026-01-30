@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARTICIPANT
+  ADMIN
+  JUDGE
+}
+
+enum RoundType {
+  DECODE_THE_SECRET
+  FIND_AND_CRACK
+  CATCH_THE_FLAG
+}
+
+enum RoundStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  LOCKED
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  username      String        @unique
+  passwordHash  String
+  role          UserRole      @default(PARTICIPANT)
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id])
+  submissions   Submission[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([email])
+  @@index([username])
+  @@index([teamId])
+}
+
+model Team {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  members       User[]
+  submissions   Submission[]
+  scores        Score[]
+  qualified     Boolean       @default(false)
+  qualifiedAt   DateTime?
+  disqualified  Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([name])
+  @@index([qualified])
+}
+
+model Round {
+  id            String        @id @default(uuid())
+  name          String
+  type          RoundType
+  status        RoundStatus   @default(PENDING)
+  order         Int           @unique
+  description   String?
+  startTime     DateTime?
+  endTime       DateTime?
+  challenges    Challenge[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([order])
+  @@index([status])
+}
+
+model Challenge {
+  id            String        @id @default(uuid())
+  roundId       String
+  round         Round         @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  points        Int
+  flagHash      String
+  maxAttempts   Int?
+  order         Int
+  hints         String?
+  isActive      Boolean       @default(true)
+  submissions   Submission[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([roundId])
+  @@index([isActive])
+}
+
+model Submission {
+  id            String        @id @default(uuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id])
+  challengeId   String
+  challenge     Challenge     @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  submittedFlag String
+  isCorrect     Boolean       @default(false)
+  points        Int           @default(0)
+  attempts      Int           @default(1)
+  createdAt     DateTime      @default(now())
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([challengeId])
+  @@index([isCorrect])
+  @@index([createdAt])
+}
+
+model Score {
+  id            String        @id @default(uuid())
+  teamId        String
+  team          Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  totalPoints   Int           @default(0)
+  lastSolved    DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([teamId])
+  @@index([totalPoints])
+  @@index([lastSolved])
+}
+
+model SystemConfig {
+  id            String        @id @default(uuid())
+  key           String        @unique
+  value         String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
